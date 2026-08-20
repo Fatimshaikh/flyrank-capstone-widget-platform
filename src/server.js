@@ -1,12 +1,16 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import pool from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import widgetRoutes from './routes/widget.routes.js';
 import { requireAuth } from './middleware/auth.middleware.js';
+import { getWidgetConfig } from './controllers/public.controller.js';
 
 dotenv.config();
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -21,6 +25,15 @@ app.get('/health', async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Database unreachable' });
   }
 });
+
+// Versioned widget bundle - long cache since the URL itself changes on release (v1, v2...)
+app.use('/widget.v1.js', express.static(path.join(__dirname, '../public/widget.v1.js'), {
+  maxAge: '1y',
+  immutable: true,
+}));
+
+// Public, cached widget config
+app.get('/widgets/:id/config', getWidgetConfig);
 
 app.use('/auth', authRoutes);
 app.use('/widgets', widgetRoutes);

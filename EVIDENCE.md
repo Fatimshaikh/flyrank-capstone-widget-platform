@@ -59,3 +59,16 @@ Result: 404 {"error":"Widget not found"} - not even existence is leaked
 ### Tenant B's own widget list correctly empty
 curl http://localhost:3000/widgets with tenant 34's token
 Result: 200, []
+
+## Widget Delivery (Caching + Embed Snippet)
+
+### Embed snippet generated per widget
+GET /widgets/1 returns embed_snippet field with a script tag pointing to widget.v1.js?id=1
+
+### Public config endpoint serves with short cache headers
+curl -i http://localhost:3000/widgets/1/config
+Result: 200, Cache-Control: public, max-age=60
+
+### Widget JS bundle served as versioned asset with long cache headers
+curl -i http://localhost:3000/widget.v1.js
+Result: 200, Cache-Control: public, max-age=31536000, immutable
