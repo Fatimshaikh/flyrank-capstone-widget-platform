@@ -36,3 +36,8 @@ Honest log of AI-assisted work, decisions made, and issues faced while building 
 - **What happened:** Browser blocked POST to /submissions with "No Access-Control-Allow-Origin header", even though cors() was applied to the POST route.
 - **Cause:** cors middleware was attached with `router.post('/', publicCors, ...)`, which only matches POST requests. The browser's automatic OPTIONS preflight request never matched any route, so it 404'd before CORS headers could be added.
 - **Fix:** Changed to `router.use(publicCors)` at the router level, so CORS headers are applied to every HTTP method on that route, including the OPTIONS preflight.
+
+### Issue 4: node --test could not find test/ directory
+- **What happened:** `node --test test/` threw MODULE_NOT_FOUND, treating the folder as a module to require rather than a directory to scan.
+- **Cause:** Inconsistent glob/path handling for directory arguments with Node's built-in test runner on this environment.
+- **Fix:** Changed the test script to an explicit glob pattern: `node --test test/*.test.js`, which reliably picks up all test files.

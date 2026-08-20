@@ -122,3 +122,13 @@ Result: 15 rows returned, including the honeypot-flagged one (auditable but not 
 ### Expired JWT correctly rejected
 Reused a token issued 2+ hours earlier
 Result: 401 {"error":"Invalid or expired token"} - confirms JWT expiry (2h) is enforced
+
+## Automated Test Suite
+
+### Full test suite run: 14/14 passing
+npm test (node --test test/*.test.js)
+Covers: registration, duplicate email (409), invalid input (400), login success/failure,
+widget creation, unauthenticated rejection (401), tenant isolation (404 across tenants),
+valid submission, malformed payload (400), oversized payload (400), honeypot detection,
+CORS preflight handling.
+Result: tests 14, pass 14, fail 0
