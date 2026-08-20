@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -14,6 +15,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(o => o.trim());
+
+// Public routes (config, widget bundle, submissions) allow any origin,
+// since we can't know every customer website in advance - that's the whole point
+// of an embeddable widget. Auth/dashboard routes are NOT covered by this.
+const publicCors = cors({
+  origin: true, // reflects the request's own origin - allows any site to embed the widget
+  methods: ['GET', 'POST', 'OPTIONS'],
+});
+
 app.use(express.json());
 
 app.get('/health', async (req, res) => {
@@ -26,15 +37,14 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Versioned widget bundle - long cache since the URL itself changes on release (v1, v2...)
-app.use('/widget.v1.js', express.static(path.join(__dirname, '../public/widget.v1.js'), {
+// Public, CORS-enabled routes
+app.use('/widget.v1.js', publicCors, express.static(path.join(__dirname, '../public/widget.v1.js'), {
   maxAge: '1y',
   immutable: true,
 }));
+app.get('/widgets/:id/config', publicCors, getWidgetConfig);
 
-// Public, cached widget config
-app.get('/widgets/:id/config', getWidgetConfig);
-
+// Owner-facing routes - NOT public CORS, browser default (same-origin only) applies
 app.use('/auth', authRoutes);
 app.use('/widgets', widgetRoutes);
 

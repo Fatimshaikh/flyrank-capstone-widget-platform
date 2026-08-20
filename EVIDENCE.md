@@ -72,3 +72,12 @@ Result: 200, Cache-Control: public, max-age=60
 ### Widget JS bundle served as versioned asset with long cache headers
 curl -i http://localhost:3000/widget.v1.js
 Result: 200, Cache-Control: public, max-age=31536000, immutable
+
+## Cross-Origin Widget Rendering (CORS)
+
+### Widget renders successfully on a second-origin test page
+Served public-test-site/index.html on http://localhost:5500 (separate origin from API on :3000)
+Before CORS fix: browser blocked fetch with "No Access-Control-Allow-Origin header present"
+After adding cors middleware scoped to public routes (config + widget bundle): widget rendered correctly
+Confirms: public widget-serving routes explicitly allow cross-origin requests, while
+authenticated owner routes remain same-origin only by default (not covered by publicCors).
