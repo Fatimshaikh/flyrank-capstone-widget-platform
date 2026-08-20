@@ -97,3 +97,13 @@ Forced FORCE_EMAIL_FAILURE=true, then submitted a valid form
 Result: {"success":true,"id":5,"spam":false} - submission still succeeded
 Server log: "[EMAIL] Failed to send confirmation (non-critical): Simulated email provider outage"
 Confirms: non-critical side effect failure never breaks the main submission path
+
+## Rate Limiting
+
+### Burst of 12 rapid submissions: first 10 succeed, remaining get 429
+Sent 12 back-to-back POST /submissions requests from the same IP (limit: 10 per 60s)
+Results: requests 1-10 returned 201, requests 11-12 returned 429
+
+### Server stays up and serves normal traffic immediately after the burst
+curl http://localhost:3000/health immediately after the burst test
+Result: 200 - confirms rate limiting protects the endpoint without taking down the service
