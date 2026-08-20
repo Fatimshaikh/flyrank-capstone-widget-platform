@@ -107,3 +107,18 @@ Results: requests 1-10 returned 201, requests 11-12 returned 429
 ### Server stays up and serves normal traffic immediately after the burst
 curl http://localhost:3000/health immediately after the burst test
 Result: 200 - confirms rate limiting protects the endpoint without taking down the service
+
+## Dashboard API
+
+### Stats endpoint returns aggregated, tenant-scoped analytics
+curl http://localhost:3000/dashboard/stats with valid JWT
+Result: total_submissions, by_widget, by_country, and last_7_days breakdowns, all scoped to the authenticated tenant.
+Honeypot-flagged submissions correctly excluded from all counts.
+
+### Submissions endpoint returns full tenant-scoped submission list
+curl http://localhost:3000/dashboard/submissions with valid JWT
+Result: 15 rows returned, including the honeypot-flagged one (auditable but not counted in stats)
+
+### Expired JWT correctly rejected
+Reused a token issued 2+ hours earlier
+Result: 401 {"error":"Invalid or expired token"} - confirms JWT expiry (2h) is enforced

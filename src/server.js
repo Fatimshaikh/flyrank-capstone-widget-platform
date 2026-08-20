@@ -7,6 +7,7 @@ import pool from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import widgetRoutes from './routes/widget.routes.js';
 import submissionRoutes from './routes/submission.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
 import { requireAuth } from './middleware/auth.middleware.js';
 import { getWidgetConfig } from './controllers/public.controller.js';
 
@@ -39,6 +40,7 @@ app.use('/submissions', submissionRoutes);
 
 app.use('/auth', authRoutes);
 app.use('/widgets', widgetRoutes);
+app.use('/dashboard', dashboardRoutes);
 
 app.get('/whoami', requireAuth, (req, res) => {
   res.json({ message: 'You are authenticated', user: req.user });
