@@ -37,3 +37,25 @@ Result: 401 {"error":"Invalid or expired token"}
 ### Request with a valid token is allowed through, identity correctly attached
 curl http://localhost:3000/whoami -H "Authorization: Bearer <real token>"
 Result: 200 {"message":"You are authenticated","user":{"id":1,"email":"fatima@example.com"}}
+
+## Widget Management (Multi-Tenant CRUD)
+
+### Authenticated user can create a widget
+curl -X POST http://localhost:3000/widgets with valid JWT and widget payload
+Result: 201, widget created with correct tenant_id from the JWT
+
+### Widget list is scoped to the authenticated tenant
+curl http://localhost:3000/widgets with valid JWT
+Result: 200, array containing only that tenant's widgets
+
+### Request without a token is rejected
+curl http://localhost:3000/widgets (no Authorization header)
+Result: 401 {"error":"Missing or malformed Authorization header"}
+
+### Tenant isolation proven: Tenant B cannot access Tenant A's widget
+Created second user (tenant_id 34), attempted to fetch tenant 1's widget (id=1) using tenant 34's token
+Result: 404 {"error":"Widget not found"} - not even existence is leaked
+
+### Tenant B's own widget list correctly empty
+curl http://localhost:3000/widgets with tenant 34's token
+Result: 200, []

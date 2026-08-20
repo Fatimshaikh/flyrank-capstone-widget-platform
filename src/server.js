@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import pool from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
+import widgetRoutes from './routes/widget.routes.js';
 import { requireAuth } from './middleware/auth.middleware.js';
 
 dotenv.config();
@@ -22,6 +23,7 @@ app.get('/health', async (req, res) => {
 });
 
 app.use('/auth', authRoutes);
+app.use('/widgets', widgetRoutes);
 
 app.get('/whoami', requireAuth, (req, res) => {
   res.json({ message: 'You are authenticated', user: req.user });
