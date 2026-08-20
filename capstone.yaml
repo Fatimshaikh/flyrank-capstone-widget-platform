@@ -1,0 +1,81 @@
+name: flyrank-capstone-widget-platform
+description: Embeddable widget and lead-capture platform backend
+
+setup:
+  - npm install
+  - cp .env.example .env
+  - docker compose up -d
+
+run: npm run dev
+migrate: npm run migrate
+test: npm test
+
+base_url: http://localhost:3000
+
+endpoints:
+  health:
+    method: GET
+    path: /health
+
+  auth_register:
+    method: POST
+    path: /auth/register
+    body:
+      email: string
+      password: string
+
+  auth_login:
+    method: POST
+    path: /auth/login
+    body:
+      email: string
+      password: string
+
+  widgets_create:
+    method: POST
+    path: /widgets
+    auth: bearer
+    body:
+      type: signup_form | cta_popover
+      title: string
+      fields: array
+
+  widgets_list:
+    method: GET
+    path: /widgets
+    auth: bearer
+
+  widget_config:
+    method: GET
+    path: /widgets/:id/config
+    auth: none
+
+  widget_bundle:
+    method: GET
+    path: /widget.v1.js
+    auth: none
+
+  submissions_create:
+    method: POST
+    path: /submissions
+    auth: none
+    rate_limited: true
+    body:
+      widget_id: number
+      data: object
+      website: string (honeypot, optional)
+
+  dashboard_stats:
+    method: GET
+    path: /dashboard/stats
+    auth: bearer
+
+  dashboard_submissions:
+    method: GET
+    path: /dashboard/submissions
+    auth: bearer
+
+notes:
+  - Free geo providers (ip-api.com, ipapi.co) require no API key.
+  - Email side effect is console-logged, not real SMTP - see README limitations.
+  - Second-origin test page available at public-test-site/index.html, served separately on port 5500.
