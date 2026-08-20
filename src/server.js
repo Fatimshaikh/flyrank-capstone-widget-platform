@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import pool from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import widgetRoutes from './routes/widget.routes.js';
+import submissionRoutes from './routes/submission.routes.js';
 import { requireAuth } from './middleware/auth.middleware.js';
 import { getWidgetConfig } from './controllers/public.controller.js';
 
@@ -15,15 +16,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(o => o.trim());
-
-// Public routes (config, widget bundle, submissions) allow any origin,
-// since we can't know every customer website in advance - that's the whole point
-// of an embeddable widget. Auth/dashboard routes are NOT covered by this.
-const publicCors = cors({
-  origin: true, // reflects the request's own origin - allows any site to embed the widget
-  methods: ['GET', 'POST', 'OPTIONS'],
-});
+const publicCors = cors({ origin: true, methods: ['GET', 'POST', 'OPTIONS'] });
 
 app.use(express.json());
 
@@ -37,14 +30,13 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Public, CORS-enabled routes
 app.use('/widget.v1.js', publicCors, express.static(path.join(__dirname, '../public/widget.v1.js'), {
   maxAge: '1y',
   immutable: true,
 }));
 app.get('/widgets/:id/config', publicCors, getWidgetConfig);
+app.use('/submissions', submissionRoutes);
 
-// Owner-facing routes - NOT public CORS, browser default (same-origin only) applies
 app.use('/auth', authRoutes);
 app.use('/widgets', widgetRoutes);
 

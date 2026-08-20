@@ -26,3 +26,13 @@ Honest log of AI-assisted work, decisions made, and issues faced while building 
 
 - Used Claude to plan file structure, generate boilerplate (db.js, server.js, docker-compose.yml, .gitignore) and explain concepts (connection pooling, CORS, layered architecture) while learning Node.js/Express for the first time.
 - All commands were run and verified manually before proceeding to the next step; every AI-suggested config was checked against actual terminal output (docker ps, psql version check, curl health check) rather than trusted blindly.
+
+### Issue 2: nodemon didn't auto-restart on .env changes
+- **What happened:** Editing .env via `sed -i` did not reliably trigger nodemon's file watcher, so FORCE_EMAIL_FAILURE toggles weren't picked up automatically, causing a test to run against stale code.
+- **Cause:** nodemon's default watch behavior can miss rapid/scripted edits to .env on Windows, unlike normal source file saves.
+- **Fix:** Manually typed `rs` + Enter in the nodemon terminal to force an explicit restart after changing .env, rather than relying on auto-detection.
+
+### Issue 3: CORS preflight (OPTIONS) request 404'd despite CORS middleware being present
+- **What happened:** Browser blocked POST to /submissions with "No Access-Control-Allow-Origin header", even though cors() was applied to the POST route.
+- **Cause:** cors middleware was attached with `router.post('/', publicCors, ...)`, which only matches POST requests. The browser's automatic OPTIONS preflight request never matched any route, so it 404'd before CORS headers could be added.
+- **Fix:** Changed to `router.use(publicCors)` at the router level, so CORS headers are applied to every HTTP method on that route, including the OPTIONS preflight.

@@ -81,3 +81,19 @@ Before CORS fix: browser blocked fetch with "No Access-Control-Allow-Origin head
 After adding cors middleware scoped to public routes (config + widget bundle): widget rendered correctly
 Confirms: public widget-serving routes explicitly allow cross-origin requests, while
 authenticated owner routes remain same-origin only by default (not covered by publicCors).
+
+## Public Submission Endpoint
+
+### Cross-origin submission from second-origin test page succeeds
+Submitted form on http://localhost:5500 (widget page), stored via POST http://localhost:3000/submissions
+Result: "Thank you! Your submission was received." + [EMAIL] Confirmation sent logged server-side
+
+### Honeypot spam detection works, bot still gets a generic success response
+curl -X POST /submissions with website field filled (simulating a bot)
+Result: {"success":true,"id":2,"spam":true}, and DB confirms honeypot_triggered = true for that row
+
+### Email/notification failure does not block a successful submission
+Forced FORCE_EMAIL_FAILURE=true, then submitted a valid form
+Result: {"success":true,"id":5,"spam":false} - submission still succeeded
+Server log: "[EMAIL] Failed to send confirmation (non-critical): Simulated email provider outage"
+Confirms: non-critical side effect failure never breaks the main submission path
