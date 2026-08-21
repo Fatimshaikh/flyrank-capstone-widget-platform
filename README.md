@@ -138,3 +138,28 @@ item, including rate limiting bursts and email failure-tolerance.
 
 See `DESIGN.md` for the original data model and API surface plan, and
 `BUILDLOG.md` for a full troubleshooting log of every issue hit while building this.
+
+## Architecture Diagram
+
+```mermaid
+flowchart TD
+    Owner[Widget Owner<br/>authenticated] -->|JWT| Auth[POST /auth/register, /auth/login]
+    Owner -->|JWT| WidgetAPI[Widget CRUD API<br/>/widgets]
+    Owner -->|JWT| Dashboard[Dashboard API<br/>/dashboard/stats, /submissions]
+
+    WidgetAPI --> DB[(PostgreSQL)]
+    Dashboard --> DB
+
+    CustomerSite[Customer Website<br/>any origin] -->|script tag| Bundle[GET /widget.v1.js<br/>long cache]
+    Bundle -->|fetch config| Config[GET /widgets/:id/config<br/>short cache, CORS]
+    Config --> DB
+
+    Visitor[Website Visitor<br/>public, untrusted] -->|POST| Submit[POST /submissions<br/>CORS + rate limited]
+    Submit --> Validate{Zod validation}
+    Validate -->|invalid| Reject[400 JSON error]
+    Validate -->|valid| Honeypot{Honeypot check}
+    Honeypot --> Geo[Geo enrichment<br/>Provider A to Provider B to none]
+    Geo --> Store[Store submission]
+    Store --> DB
+    Store --> Email[Confirmation email<br/>non-critical, may fail]
+```
