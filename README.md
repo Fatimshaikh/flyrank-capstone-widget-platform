@@ -163,3 +163,38 @@ flowchart TD
     Store --> DB
     Store --> Email[Confirmation email<br/>non-critical, may fail]
 ```
+
+## Architecture Diagram
+
+```mermaid
+flowchart TD
+    Owner[Widget Owner - authenticated] -->|JWT| Auth[POST /auth/register, /auth/login]
+    Owner -->|JWT| WidgetAPI[Widget CRUD API - /widgets]
+    Owner -->|JWT| Dashboard[Dashboard API - /dashboard/stats, /submissions]
+
+    WidgetAPI --> DB[(PostgreSQL)]
+    Dashboard --> DB
+
+    CustomerSite[Customer Website - any origin] -->|script tag| Bundle[GET /widget.v1.js - long cache]
+    Bundle -->|fetch config| Config[GET /widgets/:id/config - short cache, CORS]
+    Config --> DB
+
+    Visitor[Website Visitor - public, untrusted] -->|POST| Submit[POST /submissions - CORS + rate limited]
+    Submit --> Validate{Zod validation}
+    Validate -->|invalid| Reject[400 JSON error]
+    Validate -->|valid| Honeypot{Honeypot check}
+    Honeypot --> Geo[Geo enrichment - A to B to none]
+    Geo --> Store[Store submission]
+    Store --> DB
+    Store --> Email[Confirmation email - non-critical, may fail]
+```
+
+## Demo Screenshots
+
+1. `docs/screenshots/01-embed-snippet.png` - authenticated widget creation, embed snippet returned
+2. `docs/screenshots/02-widget-rendered-cross-origin.png` - widget rendering on a second-origin test page
+3. `docs/screenshots/03a-form-filled.png` / `03b-submission-success.png` / `03c-dashboard-submissions.png` - full submission flow
+4. `docs/screenshots/04-invalid-payload-rejected.png` / `04b-rate-limit-429.png` - abuse protection
+5. `docs/screenshots/05-geo-fallback-chain-proof.png` - geo provider fallback chain firing during automated tests
+6. `docs/screenshots/06-email-failure-tolerance.png` - non-critical email failure does not block submission success
+7. `docs/screenshots/07-dashboard-stats.png` - tenant-scoped aggregated analytics
